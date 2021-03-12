@@ -1,6 +1,7 @@
 from selenium import webdriver
 import time
 import colorama
+from os import system
 from colorama import Fore, Style
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
@@ -19,10 +20,14 @@ class TwitterAPI(object):
 	#										 #
 	##########################################
 
-	def __init__(self):
+	def __init__(self,headless):
+
+		system("cls")
 
 		options = Options()
-		#options.headless = True
+		if headless :
+			options.headless = True
+
 		self.driver = webdriver.Firefox(options=options)
 
 		self.driver.get("https://www.google.com/")
@@ -194,6 +199,12 @@ class TwitterAPI(object):
 
 	def message_to_id(self,id,text):
 
+		if id == None:
+			print(Fore.RED+"Error : Cant send message, no id specified")
+
+		self.driver.get("https://twitter.com/messages/")
+		time.sleep(2)
+
 		self.driver.get("https://twitter.com/messages/"+id+"-"+self.my_id)
 
 		print(Fore.CYAN+"Sending message to "+id)
@@ -215,12 +226,74 @@ class TwitterAPI(object):
 		
 
 
+	##########################################
+	#										 #
+	#			   GET FOLLOWERS			 #
+	#										 #
+	##########################################
+
+	def get_followers_from_name(self,name,max):
+		self.driver.get("https://twitter.com/"+name+"/followers")
+		print(Fore.CYAN+"Getting followers of "+name+"...")
+
+		tab = []
+		try:
+		    element = WebDriverWait(self.driver, 5).until(
+		        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div[1]"))
+		    )
+		except:
+			print(Fore.RED+"Error : Cant get followers of "+name+"\n")
+			return tab
+
+		initialscrollY = 0
+		sizetoscroll = 0
+		first_follower = None
+
+		while 1:
+			try:
+				time.sleep(2)
+				followers = self.driver.find_elements_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div")
+			except:
+				print(Fore.CYAN+"There is no followers")
+				return tab
+
+			if 'followers' in locals():
+
+				#check if we are at the bottom of the followers page
+				if followers[0] == first_follower:
+					print(Fore.CYAN+"There is no more followers") 
+					return tab
+				else:
+					first_follower = followers[0]
+
+				for i in range(1,len(followers)) :
+					
+					id_name = []
+					id = self.driver.find_element_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div["+str(i)+"]/div/div/div/div[2]/div[1]/div[2]/div").get_attribute("data-testid").split("-")[0]
+					name = self.driver.find_element_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div["+str(i)+"]/div/div/div/div[2]/div[1]/div[1]/a/div/div[2]/div[1]/span").text
+					id_name.append(id)
+					id_name.append(name)
+
+					if not(id_name in tab):
+						tab.append(id_name)
+
+					if len(tab) == 40:
+						return tab 
+
+					#print(id_name)
+					#print(followers[i].size['height'])
+					sizetoscroll = sizetoscroll + int(followers[i].size['height'])
+
+				self.driver.execute_script("window.scrollBy(0,"+str(sizetoscroll)+");")
 
 
-api = TwitterAPI()
+api = TwitterAPI(headless=False)
 api.connect(username="Devccx",password="romain619",getid=True)
-time.sleep(20)
+#res = api.get_followers_from_name(name="ccx280",max=100)
+#for r in res:
+#	print(r)
+#time.sleep(20)
 #api.tweet("@q8_5t test 1 2 test eske tu mrecois  ???? allloo")
-#id = api.get_id("CCX280")
-api.message_to_id(id="215789787",text="Hi")
+id = api.get_id("je_suis_Quidam")
+api.message_to_id(id=id,text="test")
 #api.quit()
