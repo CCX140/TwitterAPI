@@ -12,6 +12,16 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 colorama.init()
 
+EN = "England"
+FR = "France"
+US = "United States"
+IN = "India"
+KR = "Korea"
+JP = "Japan"
+RS = "Russia"
+SP = "Spain"
+IT = "Italy"
+
 class TwitterAPI(object):
 
 	##########################################
@@ -91,7 +101,7 @@ class TwitterAPI(object):
 				print(Fore.GREEN + "Connected !\n")
 				if getid :
 					time.sleep(1)
-					self.my_id = self.get_id(username)
+					self.my_id = self.get_id_from_banner(username)
 			else:
 				print("Error : Not Connected")
 				return
@@ -160,7 +170,7 @@ class TwitterAPI(object):
 	#										 #
 	##########################################
 		
-	def get_id(self,name):
+	def get_id_from_banner(self,name):
 		print(Fore.CYAN+"Getting id of "+name+"...")
 
 		if not(self.driver.current_url == "https://twitter.com/"+name):
@@ -190,6 +200,43 @@ class TwitterAPI(object):
 				return
 
 
+	def get_id(self,name):
+
+		self.driver.get("https://twitter.com/home")
+		time.sleep(1)
+
+		print(Fore.CYAN+"Getting id of "+name+"...")
+
+		if not(self.driver.current_url == "https://twitter.com/"+name):
+			self.driver.get("https://twitter.com/"+name)
+			time.sleep(1)
+
+		try:
+		    element = WebDriverWait(self.driver, 5).until(
+		        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/div[1]/div/div[1]/div"))
+
+		    )
+		except:
+			print(Fore.RED+"Error : Cant get id of "+name)
+			return
+
+		finally:
+
+			elements = self.driver.find_elements_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/div[1]/div/div[1]/div/div")
+			element = self.driver.find_element_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/div/div[1]/div/div[1]/div/div["+str(len(elements))+"]/div/div")
+
+			if 'element' in locals():
+				time.sleep(1)
+				src = element.get_attribute("data-testid")
+				split = src.split("-")
+				print(Fore.GREEN+"Id of "+name+" is "+split[0]+"\n")
+				return split[0]
+
+			else:
+				print(Fore.RED+"Error : Cant get id of "+name)
+				time.sleep(1)
+				return
+
 
 	##########################################
 	#										 #
@@ -201,6 +248,7 @@ class TwitterAPI(object):
 
 		if id == None:
 			print(Fore.RED+"Error : Cant send message, no id specified")
+			return
 
 		self.driver.get("https://twitter.com/messages/")
 		time.sleep(2)
@@ -251,10 +299,10 @@ class TwitterAPI(object):
 
 		while 1:
 			try:
-				time.sleep(2)
-				followers = self.driver.find_elements_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div")
+				time.sleep(3)
+				followers = self.driver.find_elements_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/section/div/div/div")															
 			except:
-				print(Fore.CYAN+"There is no followers")
+				print(Fore.CYAN+"There is no followers\n")
 				return tab
 
 			if 'followers' in locals():
@@ -262,6 +310,7 @@ class TwitterAPI(object):
 				#check if we are at the bottom of the followers page
 				if followers[0] == first_follower:
 					print(Fore.CYAN+"There is no more followers") 
+					print(Fore.GREEN+"Done !\n")
 					return tab
 				else:
 					first_follower = followers[0]
@@ -277,7 +326,8 @@ class TwitterAPI(object):
 					if not(id_name in tab):
 						tab.append(id_name)
 
-					if len(tab) == 40:
+					if len(tab) == max:
+						print(Fore.GREEN+"Done !\n")
 						return tab 
 
 					#print(id_name)
@@ -287,13 +337,106 @@ class TwitterAPI(object):
 				self.driver.execute_script("window.scrollBy(0,"+str(sizetoscroll)+");")
 
 
+
+	##########################################
+	#										 #
+	#			   GET TRENDS			 	 #
+	#										 #
+	##########################################
+
+	def get_trends(self,location):
+		print(Fore.CYAN+"Getting Trends from..."+location)
+
+		self.driver.get("https://twitter.com/settings/explore/location")
+
+		try:
+		    element = WebDriverWait(self.driver, 5).until(
+		        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div[2]/div/div[1]/div/div[2]/input"))
+		    )
+		except:
+			print(Fore.RED+"Error : Cant select location\n")
+			return
+		finally:
+
+			element.send_keys(location)
+			time.sleep(3)
+
+			try:
+			    element = WebDriverWait(self.driver, 5).until(
+			        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div[1]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div[2]/div/div[2]/div/div"))
+			    )
+			except:
+				print(Fore.RED+"Error : Wrong location\n")
+				return
+
+			finally:
+				element.click()
+				time.sleep(1)
+
+
+		self.driver.get("https://twitter.com/i/trends")
+
+		try:
+		    element = WebDriverWait(self.driver, 5).until(
+		        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/section/div/div/div[2]/div/div"))
+		    )
+		except:
+			print(Fore.RED+"Error : Cant get trends\n")
+			return
+		finally:
+			tab = []
+			time.sleep(1)
+			elements = self.driver.find_elements_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/section/div/div/div")
+			for i in range(2,len(elements)):
+				text = self.driver.find_element_by_xpath("/html/body/div/div/div/div[2]/main/div/div/div/div[1]/div/div[2]/div/section/div/div/div["+str(i)+"]/div/div/div/div[2]/span").text																  												  
+				print(text)
+				tab.append(text)
+
+			return(tab)
+
+
+
+	##########################################
+	#										 #
+	#			   TWEET TRENDS			 	 #
+	#										 #
+	##########################################
+
+	def tweet_trends(self,location,text):
+
+		trends = self.get_trends(location)
+
+		for i in range(0,len(trends)-1):
+			api.tweet(text=(text+trends[i]+" "))
+			time.sleep(10)
+
+	def tweet_with_all_trends(self,location,text):
+		trends = self.get_trends(location)
+
+		t = text
+		for i in range(0,len(trends)-1):
+			t = t+" "+trends[i]
+
+		t = t+" "
+		api.tweet(text=t)
+
+
 api = TwitterAPI(headless=False)
 api.connect(username="Devccx",password="romain619",getid=True)
-#res = api.get_followers_from_name(name="ccx280",max=100)
+
+#res = api.get_followers_from_name(name="elonmusk",max=1000)
 #for r in res:
 #	print(r)
-#time.sleep(20)
+#print(len(res))
+
+
 #api.tweet("@q8_5t test 1 2 test eske tu mrecois  ???? allloo")
-id = api.get_id("je_suis_Quidam")
-api.message_to_id(id=id,text="test")
-#api.quit()
+
+#id = api.get_id("elonmusk")
+#api.message_to_id(id=id,text="test")
+
+#api.get_trends(location=US)
+
+api.tweet_with_all_trends(location=FR,text="Je vends des bots Twitter ! Si vous êtes interessés -> DM ")
+
+api.quit()
