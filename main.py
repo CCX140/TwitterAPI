@@ -422,21 +422,19 @@ class TwitterAPI(object):
 
 
 api = TwitterAPI(headless=False)
-api.connect(username="Devccx",password="romain619",getid=True)
+api.connect(username="******",password="******",getid=True)
 
 #res = api.get_followers_from_name(name="elonmusk",max=1000)
+
 #for r in res:
 #	print(r)
 #print(len(res))
-
-
-#api.tweet("@q8_5t test 1 2 test eske tu mrecois  ???? allloo")
 
 #id = api.get_id("elonmusk")
 #api.message_to_id(id=id,text="test")
 
 #api.get_trends(location=US)
 
-api.tweet_with_all_trends(location=FR,text="Je vends des bots Twitter ! Si vous êtes interessés -> DM ")
+#api.tweet_with_all_trends(location=FR,text="**********")
 
 api.quit()
